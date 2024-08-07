@@ -1,4 +1,5 @@
 ﻿using CollegeApp.Models;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CollegeApp.Controllers
@@ -10,10 +11,18 @@ namespace CollegeApp.Controllers
         [HttpGet]
         [Route("All", Name = "GetAllStudents")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public ActionResult<IEnumerable<Student>> GetSudents()
+        public ActionResult<IEnumerable<StudentDTO>> GetSudents()
         {
+            var students = CollegeRepository.Students.Select(n => new StudentDTO()
+            { 
+                Id = n.Id,
+                Name = n.Name,
+                Address = n.Address,
+                Email = n.Email
+            });
+
             //OK - 200 - Success
-            return Ok(CollegeRepository.Students);
+            return Ok(students);
         }
 
         [HttpGet]
@@ -22,7 +31,7 @@ namespace CollegeApp.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public ActionResult<Student> GetStudentByID(int id) 
+        public ActionResult<StudentDTO> GetStudentByID(int id) 
         {
             //BadRequest - 400 - BadRequest - ClientError
             if (id <= 0)
@@ -34,8 +43,16 @@ namespace CollegeApp.Controllers
             if (student == null)
                 return NotFound($"The student with id {id} not found");
 
+            var studentDTO = new StudentDTO()
+            {
+                Id = student.Id,
+                Name = student.Name,
+                Address = student.Address,
+                Email = student.Email
+            };
+
             //OK - 200 - Success
-            return Ok(student);
+            return Ok(studentDTO);
         }
 
         [HttpGet("{name:alpha}", Name = "GetStudentByName")]
@@ -56,9 +73,54 @@ namespace CollegeApp.Controllers
             if (student == null)
                 return NotFound($"The student with name {name} not found");
 
+            var studentDTO = new StudentDTO()
+            {
+                Id = student.Id,
+                Name = student.Name,
+                Address = student.Address,
+                Email = student.Email
+            };
+
             //OK - 200 - Success
             return Ok(student);
         }
+
+        [HttpPost]
+        [Route("Create")]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public ActionResult<StudentDTO> CreateStudent([FromBody]StudentDTO model)
+        {
+
+            if(model == null)
+                return BadRequest();
+
+            if (model.AdmissionDate < DateTime.Now)
+            {
+                ModelState.AddModelError("Admission error", "Must be greater");
+                return BadRequest(ModelState);
+            }
+
+            int newId = CollegeRepository.Students.LastOrDefault().Id + 1;
+
+            Student student = new Student
+            {
+                Id = newId,
+                Name = model.Name,
+                Address = model.Address,
+                Email = model.Email
+            };
+
+            CollegeRepository.Students.Add(student);
+
+            model.Id = student.Id;
+
+            //Status - 201
+            return CreatedAtRoute("GetStudentById", new { id = model.Id}, model);
+        }
+
+
 
         [HttpDelete("{id:min(1):max(100)}", Name = "DeleteStudentByID")]
         [ProducesResponseType(StatusCodes.Status200OK)]
