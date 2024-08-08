@@ -1,6 +1,9 @@
 using CollegeApp.MyLogging;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
 
 // Add services to the container.
 
@@ -10,8 +13,6 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddScoped<IMyLogger, LogToDB>();
-//builder.Services.AddTransient<IMyLogger, LogToDB>();
-//builder.Services.AddSingleton<IMyLogger, LogToDB>();
 
 var app = builder.Build();
 
