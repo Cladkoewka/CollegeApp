@@ -96,12 +96,6 @@ namespace CollegeApp.Controllers
             if(model == null)
                 return BadRequest();
 
-            if (model.AdmissionDate < DateTime.Now)
-            {
-                ModelState.AddModelError("Admission error", "Must be greater");
-                return BadRequest(ModelState);
-            }
-
             int newId = CollegeRepository.Students.LastOrDefault().Id + 1;
 
             Student student = new Student
@@ -121,6 +115,27 @@ namespace CollegeApp.Controllers
         }
 
 
+        [HttpPut]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public ActionResult UpdateStudent([FromBody] StudentDTO model)
+        {
+            if (model == null || model.Id <= 0)
+                return BadRequest();
+
+            var existingStudent = CollegeRepository.Students.Where(s => s.Id == model.Id).FirstOrDefault();
+
+            if (existingStudent == null)
+                return NotFound();
+
+            existingStudent.Name = model.Name;
+            existingStudent.Email = model.Email;
+            existingStudent.Address = model.Address;
+
+            return NoContent();
+        }
 
         [HttpDelete("{id:min(1):max(100)}", Name = "DeleteStudentByID")]
         [ProducesResponseType(StatusCodes.Status200OK)]
