@@ -9,9 +9,9 @@ namespace CollegeApp.Controllers
     {
         private readonly IMyLogger _myLogger;
 
-        public DemoController()
+        public DemoController(IMyLogger myLogger)
         {
-            _myLogger = new LogToFile();
+            _myLogger = myLogger;
         }
 
         [HttpGet]
